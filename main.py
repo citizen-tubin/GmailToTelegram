@@ -17,7 +17,6 @@ run_test_if_labels_work_job = bool(config.get('MISSION','RUN_TEST_IF_LABELS_WORK
 async def main():
     mail = Mail()
     message = Message()
-    summarized_mails = []
     if run_mails_to_whatsapp_job:
         summarized_mails = [mail.get_mails_with_credentials(item) for item in search_in_message]
 
