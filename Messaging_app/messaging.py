@@ -21,9 +21,16 @@ class Message:
     def __get_chat_id(self):
         url = f"https://api.telegram.org/bot{bot_token}/getUpdates"
         response =  requests.get(url).json()
+
         if response['ok'] == True and response['result'] == []:
-            print ('New bot token is required. Please send your Telegram bot a random message and rerun program')
-            print ('Stopping the code execution')
-            raise SystemExit
+            self.__raiseSystemExit('New bot token is required. Please send your Telegram bot a random message and rerun program')
+        if response['ok'] == False and response['description'] == 'Unauthorized':
+            self.__raiseSystemExit('Your bot token is incorrect')
+
         chat_id = response['result'][0]['message']['chat']['id']
         return chat_id
+
+    def __raiseSystemExit(self, message):
+        print(message)
+        print('Stopping the code execution')
+        raise SystemExit

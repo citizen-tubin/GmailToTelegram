@@ -20,6 +20,7 @@ is_add_scanned_label_enabled = bool(config.get('MAIL', 'IS_ADD_SCANNED_LABEL_ENA
 
 class Mail:
     def __init__(self):
+        self.creds = ""
         self.__get_credentials_info()
         self.service = build('gmail', 'v1', credentials=self.creds)
 
@@ -34,7 +35,7 @@ class Mail:
                 message_info = self.service.users().messages().get(userId='me', id=message_meta_data['id']).execute()
                 message_summary = {item['name']: item['value'] for item in message_info['payload']['headers']}
                 result = self.__convert_to_summary_structure(message_meta_data['id'], filter_by, message_info['snippet'], message_summary)
-                self.__mark_message_as_processed(message_meta_data['id'], [filter_by])
+                self.__mark_message_as_processed(message_meta_data['id'])
                 summarized_messages.append(result)
             return summarized_messages
         except Exception as error:
@@ -87,7 +88,7 @@ class Mail:
             f"Mail Summary: {snippet} \n" \
             f"Sent At: {message_header['Date']}"
 
-    def __mark_message_as_processed(self, message_id, custom_labels):
+    def __mark_message_as_processed(self, message_id):
         labels_to_add = []
         labels_to_remove = []
         body = {}
@@ -98,10 +99,8 @@ class Mail:
 
         if is_add_scanned_label_enabled:
             labels_to_add.append('SCANNED')
-        if custom_labels and len(custom_labels) > 0:
-            labels_to_add.extend(custom_labels)
 
-        # if (len(labels_to_add) > 0): body['addLabelIds'] = labels_to_add #TODO 4
+        if (len(labels_to_add) > 0): body['addLabelIds'] = labels_to_add
 
         self.service.users().messages().modify(userId='me', id=message_id,
                                                body=body).execute()
