@@ -5,7 +5,7 @@ from telegram import Bot
 config = configparser.ConfigParser()
 config.read('.ini')
 
-bot_token = config.get('TELEGRAM','TOKEN')
+bot_token = config.get('TELEGRAM', 'TOKEN')
 
 
 class Message:
@@ -17,20 +17,21 @@ class Message:
             bot = Bot(token=bot_token)
             await bot.send_message(chat_id=self.chat_id, text=message)
 
-
     def __get_chat_id(self):
         url = f"https://api.telegram.org/bot{bot_token}/getUpdates"
-        response =  requests.get(url).json()
+        response = requests.get(url).json()
 
-        if response['ok'] == True and response['result'] == []:
-            self.__raiseSystemExit('New bot token is required. Please send your Telegram bot a random message and rerun program')
-        if response['ok'] == False and response['description'] == 'Unauthorized':
-            self.__raiseSystemExit('Your bot token is incorrect')
+        if response['ok'] and response['result'] == []:
+            self.__raise_system_exit('New bot token is required. '
+                                     'Please send your Telegram bot a random message and rerun program')
+        if not response['ok'] and response['description'] == 'Unauthorized':
+            self.__raise_system_exit('Your bot token is incorrect')
 
         chat_id = response['result'][0]['message']['chat']['id']
         return chat_id
 
-    def __raiseSystemExit(self, message):
+    @staticmethod
+    def __raise_system_exit(message):
         print(message)
         print('Stopping the code execution')
         raise SystemExit

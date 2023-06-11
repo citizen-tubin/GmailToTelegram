@@ -6,16 +6,18 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 import configparser
+from Mail.label import create_label_if_not_exist
 
 config = configparser.ConfigParser()
 config.read('.ini')
 
 scopes = ast.literal_eval(config.get('MAIL', 'SCOPES'))
 search_labels = ast.literal_eval(config.get('MAIL', 'SEARCH_LABELS'))
+label_to_create = ast.literal_eval(config.get('MAIL', 'LABEL_TO_CREATE'))
 token_path = config.get('MAIL', 'TOKEN_PATH')
 credentials_path = config.get('MAIL', 'CREDENTIALS_PATH')
-is_mark_as_read_enabled = bool(config.get('MAIL', 'IS_MARK_AS_READ_ENABLED'))
-is_add_scanned_label_enabled = bool(config.get('MAIL', 'IS_ADD_SCANNED_LABEL_ENABLED'))
+is_mark_as_read_enabled = config.getboolean('MAIL', 'IS_MARK_AS_READ_ENABLED')
+is_add_scanned_label_enabled = config.getboolean('MAIL', 'IS_ADD_SCANNED_LABEL_ENABLED')
 
 
 class Mail:
@@ -23,6 +25,7 @@ class Mail:
         self.creds = ""
         self.__get_credentials_info()
         self.service = build('gmail', 'v1', credentials=self.creds)
+        self.label = create_label_if_not_exist(self.service, label_to_create)
 
     def get_mails_with_credentials(self, filter_by):
         try:
@@ -40,9 +43,6 @@ class Mail:
             return summarized_messages
         except Exception as error:
             print(f'An error occurred: {error}')
-
-    async def send(self, sender, recipient, label_name, msg_template):
-        return
 
     def __get_credentials_info(self):
         if os.path.exists(token_path):
@@ -98,9 +98,7 @@ class Mail:
             body['removeLabelIds'] = labels_to_remove
 
         if is_add_scanned_label_enabled:
-            labels_to_add.append('SCANNED')
-
-        if (len(labels_to_add) > 0): body['addLabelIds'] = labels_to_add
+            body['addLabelIds'] = [self.label['id']]
 
         self.service.users().messages().modify(userId='me', id=message_id,
                                                body=body).execute()
