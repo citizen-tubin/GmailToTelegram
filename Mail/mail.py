@@ -14,7 +14,7 @@ scanned_message_label = ast.literal_eval(config.get('MAIL', 'SCANNED_MESSAGE_LAB
 token_path = config.get('MAIL', 'TOKEN_PATH')
 credentials_path = config.get('MAIL', 'CREDENTIALS_PATH')
 is_mark_as_read_enabled = config.getboolean('MAIL', 'IS_MARK_AS_READ_ENABLED')
-
+labels_to_filter_by = ast.literal_eval(config.get('MAIL.FILTERS', 'LABELS_TO_FILTER_BY'))
 
 class Mail:
     def __init__(self):
@@ -113,7 +113,8 @@ class Mail:
                 token.write(self.creds.to_json())
 
     def __get_messages_meta_data(self):
-        query = "is:unread -label:{}".format(scanned_message_label)
+        keywords_to_search_by = "(" + " OR ".join(['"' + word + '"' for word in labels_to_filter_by]) + ")"
+        query = "{} is:unread -label:{}".format(keywords_to_search_by , scanned_message_label)
         results = self.service.users().messages().list(userId='me', labelIds=['INBOX'], q=query).execute()
         return results.get('messages', [])
 
@@ -131,8 +132,8 @@ class Mail:
         if is_mark_as_read_enabled:
             labels_to_remove.append('UNREAD')
             body['removeLabelIds'] = labels_to_remove
-
-        body['addLabelIds'] = [scanned_message_label['id']]
+        scanned_label_info = next((obj for obj in self.labels_info['labels'] if obj['name'] == scanned_message_label), None)
+        body['addLabelIds'] = [scanned_label_info['id']]
 
         self.service.users().messages().modify(userId='me', id=message_id,
                                                body=body).execute()

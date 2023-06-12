@@ -10,7 +10,7 @@ config.read('.ini')
 
 is_run_mail_to_whatsapp_job_enabled = config.getboolean('MISSION', 'IS_RUN_MAIL_TO_WHATSAPP_JOB_ENABLED')
 is_create_new_filters_enabled = config.getboolean('MAIL.FILTERS', 'IS_CREATE_NEW_FILTERS_ENABLED')
-filters_to_create = ast.literal_eval(config.get('MAIL.FILTERS', 'FILTER_MESSAGE_CONTAINING'))
+labels_to_filter_by = ast.literal_eval(config.get('MAIL.FILTERS', 'LABELS_TO_FILTER_BY'))
 sleeping_time_in_seconds = config.getint('SYSTEM', 'SLEEPING_TIME_IN_SECONDS')
 
 async def main():
@@ -25,7 +25,7 @@ async def main():
 
 
     if is_create_new_filters_enabled:
-        mail.create_filters_by_label_string(filters_to_create)
+        mail.create_filters_by_label_string(labels_to_filter_by)
 
     if is_run_mail_to_whatsapp_job_enabled:
         summarized_mail = mail.get_mail_with_credentials()
