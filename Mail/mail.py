@@ -10,7 +10,6 @@ config = configparser.ConfigParser()
 config.read('.ini')
 
 scopes = ast.literal_eval(config.get('MAIL', 'SCOPES'))
-search_labels = ast.literal_eval(config.get('MAIL', 'SEARCH_LABELS'))
 scanned_message_label = ast.literal_eval(config.get('MAIL', 'SCANNED_MESSAGE_LABEL'))
 token_path = config.get('MAIL', 'TOKEN_PATH')
 credentials_path = config.get('MAIL', 'CREDENTIALS_PATH')
@@ -73,9 +72,9 @@ class Mail:
                 print(f'Filter {name} created successfully.')
             except Exception as error:
                 print(f'An error occurred: {error}')
-                raise SystemExit
+                raise Exception
 
-    def get_mails_with_credentials(self):
+    def get_mail_with_credentials(self):
         try:
             messages_meta_data = self.__get_messages_meta_data()
             if not messages_meta_data:
@@ -91,7 +90,7 @@ class Mail:
             return summarized_messages
         except Exception as error:
             print(f'An error occurred: {error}')
-            raise SystemExit
+            raise Exception
 
     def __get_credentials_info(self):
         if os.path.exists(token_path):
@@ -114,21 +113,9 @@ class Mail:
                 token.write(self.creds.to_json())
 
     def __get_messages_meta_data(self):
-        label_ids = self.get_label_ids()
         query = "is:unread -label:{}".format(scanned_message_label)
-        results = self.service.users().messages().list(userId='me', labelIds=label_ids, q=query).execute()
+        results = self.service.users().messages().list(userId='me', labelIds=['INBOX'], q=query).execute()
         return results.get('messages', [])
-
-    def get_label_ids(self):
-        label_ids = []
-        labels = self.service.users().labels().list(userId='me').execute().get('labels', [])
-
-        if not labels or len(labels) == 0:
-            return label_ids
-        for label in labels:
-            if label['name'] in search_labels:
-                label_ids.append(label['id'])
-        return label_ids
 
     def __convert_to_summary_structure(self, snippet, message_header):
         return f"Subject:{message_header['Subject']}\n" \
@@ -155,4 +142,3 @@ class Mail:
         self.service = build('gmail', 'v1', credentials=self.creds)
         self.get_labels_names()
         self.create_label_if_not_exist(scanned_message_label)
-

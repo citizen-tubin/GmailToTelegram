@@ -22,16 +22,15 @@ class Message:
         response = requests.get(url).json()
 
         if response['ok'] and response['result'] == []:
-            self.__raise_system_exit('New bot token is required. '
+            self.__raise_exception('New bot token is required. '
                                      'Please send your Telegram bot a random message and rerun program')
         if not response['ok'] and response['description'] == 'Unauthorized':
-            self.__raise_system_exit('Your bot token is incorrect')
+            self.__raise_exception('Your bot token is incorrect')
 
         chat_id = response['result'][0]['message']['chat']['id']
         return chat_id
 
     @staticmethod
-    def __raise_system_exit(message):
+    def __raise_exception(message):
         print(message)
-        print('Stopping the code execution')
-        raise SystemExit
+        raise Exception

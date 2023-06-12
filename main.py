@@ -3,28 +3,40 @@ from Messaging_app.messaging import Message
 import ast
 import configparser
 import asyncio
-
+import time
 
 config = configparser.ConfigParser()
 config.read('.ini')
 
-is_run_mails_to_whatsapp_job_enabled = config.getboolean('MISSION', 'IS_RUN_MAILS_TO_WHATSAPP_JOB_ENABLED')
+is_run_mail_to_whatsapp_job_enabled = config.getboolean('MISSION', 'IS_RUN_MAIL_TO_WHATSAPP_JOB_ENABLED')
 is_create_new_filters_enabled = config.getboolean('MAIL.FILTERS', 'IS_CREATE_NEW_FILTERS_ENABLED')
-filters_to_create = ast.literal_eval(config.get('MAIL.FILTERS', 'FILTERS_MESSAGE_CONTAINING'))
-
+filters_to_create = ast.literal_eval(config.get('MAIL.FILTERS', 'FILTER_MESSAGE_CONTAINING'))
+sleeping_time_in_seconds = config.getint('SYSTEM', 'SLEEPING_TIME_IN_SECONDS')
 
 async def main():
-    mail = Mail()
-    message = Message()
+    while True:
+        try:
+            mail = Mail()
+            message = Message()
+            break
+        except Exception as e:
+            print('Failure occurred. System will retry in {} seconds'.format(sleeping_time_in_seconds))
+            time.sleep(sleeping_time_in_seconds)
+
+
     if is_create_new_filters_enabled:
         mail.create_filters_by_label_string(filters_to_create)
 
-    if is_run_mails_to_whatsapp_job_enabled:
-        summarized_mails = mail.get_mails_with_credentials()
+    if is_run_mail_to_whatsapp_job_enabled:
+        summarized_mail = mail.get_mail_with_credentials()
 
-        if len(summarized_mails) > 0:
-            await message.send(summarized_mails)
-            print('All unread mails with provided labels were read.')
+        if len(summarized_mail) > 0:
+            await message.send(summarized_mail)
+            print('All unread mail with provided labels were read.')
 
 if __name__ == '__main__':
     asyncio.run(main())
+
+
+
+
