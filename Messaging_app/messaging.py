@@ -30,7 +30,7 @@ class Message:
             raise Exception('Your bot token is incorrect')
 
         chat_id = response['result'][0]['message']['chat']['id']
-        return chat_id + "sdf"
+        return chat_id
 
 
     def __initialize(self):
