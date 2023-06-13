@@ -6,6 +6,8 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 import configparser
 
+from Mail.mail_exception import MailException
+
 config = configparser.ConfigParser()
 config.read('.ini')
 
@@ -139,7 +141,11 @@ class Mail:
                                                body=body).execute()
 
     def __initialize(self):
-        self.__get_credentials_info()
-        self.service = build('gmail', 'v1', credentials=self.creds)
-        self.get_labels_names()
-        self.create_label_if_not_exist(scanned_message_label)
+        try:
+            self.__get_credentials_info()
+            self.service = build('gmail', 'v1', credentials=self.creds)
+            self.get_labels_names()
+            self.create_label_if_not_exist(scanned_message_label)
+        except MailException as error:
+            print(f'An error occurred: {error}')
+            raise MailException("Failed to initialize mail.")

@@ -1,6 +1,7 @@
 import configparser
 import requests
 from telegram import Bot
+from Messaging_app.message_exception import MessageException
 
 config = configparser.ConfigParser()
 config.read('.ini')
@@ -10,7 +11,8 @@ bot_token = config.get('TELEGRAM', 'TOKEN')
 
 class Message:
     def __init__(self):
-        self.chat_id = self.__get_chat_id()
+        self.chat_id = -1
+        self.__initialize()
 
     async def send(self, messages):
         for message in messages:
@@ -22,15 +24,18 @@ class Message:
         response = requests.get(url).json()
 
         if response['ok'] and response['result'] == []:
-            self.__raise_exception('New bot token is required. '
+            raise Exception('New bot token is required. '
                                      'Please send your Telegram bot a random message and rerun program')
         if not response['ok'] and response['description'] == 'Unauthorized':
-            self.__raise_exception('Your bot token is incorrect')
+            raise Exception('Your bot token is incorrect')
 
         chat_id = response['result'][0]['message']['chat']['id']
-        return chat_id
+        return chat_id + "sdf"
 
-    @staticmethod
-    def __raise_exception(message):
-        print(message)
-        raise Exception
+
+    def __initialize(self):
+        try:
+            self.chat_id = self.__get_chat_id()
+        except Exception as error:
+            print(error)
+            raise MessageException("Failed to initialize Message app.")
