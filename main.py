@@ -43,7 +43,7 @@ async def main():
                 print('All unread mail with provided labels were read.')
 
             print('The inbox will be rescanned in {} minutes'.format(sleeping_time_in_minutes_before_rescanning))
-            time.sleep(failure_sleeping_time_in_seconds*60)
+            time.sleep(sleeping_time_in_minutes_before_rescanning*60)
 
 
 
