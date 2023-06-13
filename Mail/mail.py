@@ -44,7 +44,7 @@ class Mail:
         self.labels_info = self.service.users().labels().list(userId='me').execute()
         self.labels_names = [label['name'] for label in self.labels_info['labels']]
 
-    def create_filters_by_label_string(self, names):
+    def create_filters_by_label_name(self, names):
         filter_criteria = {
             'criteria': {
                 'query': ''

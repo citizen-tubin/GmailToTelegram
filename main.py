@@ -25,7 +25,7 @@ async def main():
 
 
     if is_create_new_filters_enabled:
-        mail.create_filters_by_label_string(labels_to_filter_by)
+        mail.create_filters_by_label_name(labels_to_filter_by)
 
     if is_run_mail_to_whatsapp_job_enabled:
         summarized_mail = mail.get_mail_with_credentials()
