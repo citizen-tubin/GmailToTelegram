@@ -14,6 +14,7 @@ is_run_mail_to_whatsapp_job_enabled = config.getboolean('MISSION', 'IS_RUN_MAIL_
 is_create_new_filters_enabled = config.getboolean('MAIL.FILTERS', 'IS_CREATE_NEW_FILTERS_ENABLED')
 labels_to_filter_by = ast.literal_eval(config.get('MAIL.FILTERS', 'LABELS_TO_FILTER_BY'))
 failure_sleeping_time_in_seconds = config.getint('SYSTEM', 'FAILURE_SLEEPING_TIME_IN_SECONDS')
+sleeping_time_in_minutes_before_rescanning = config.getint('SYSTEM', 'SLEEPING_TIME_IN_MINUTES_BEFORE_RESCANNING')
 
 async def main():
     while True:
@@ -40,6 +41,11 @@ async def main():
             if len(summarized_mail) > 0:
                 await message.send(summarized_mail)
                 print('All unread mail with provided labels were read.')
+
+            print('The inbox will be rescanned in {} minutes'.format(sleeping_time_in_minutes_before_rescanning))
+            time.sleep(failure_sleeping_time_in_seconds*60)
+
+
 
 
 if __name__ == '__main__':
