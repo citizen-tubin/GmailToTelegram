@@ -15,8 +15,8 @@ class Message:
         self.__initialize()
 
     async def send(self, messages):
+        bot = Bot(token=bot_token)
         for message in messages:
-            bot = Bot(token=bot_token)
             await bot.send_message(chat_id=self.chat_id, text=message)
 
     def __get_chat_id(self):

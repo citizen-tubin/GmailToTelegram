@@ -16,20 +16,26 @@ labels_to_filter_by = ast.literal_eval(config.get('MAIL.FILTERS', 'LABELS_TO_FIL
 failure_sleeping_time_in_seconds = config.getint('SYSTEM', 'FAILURE_SLEEPING_TIME_IN_SECONDS')
 sleeping_time_in_minutes_before_rescanning = config.getint('SYSTEM', 'SLEEPING_TIME_IN_MINUTES_BEFORE_RESCANNING')
 
+
 async def main():
     while True:
         try:
             mail = Mail()
             message = Message()
             break
+
         except (MailException, MessageException) as e:
-            if isinstance(e, MailException) or isinstance(e, MessageException):
+            if isinstance(e, MailException):
+                print(e)
+                await message.send(f"The following error occurred {e}. \n"
+                                   f"Please check you mail settings and credentials.")
+            if isinstance(e, MessageException):
                 print(e)
             else:
                 print('An unexpected exception occurred.')
+
             print('System will retry in {} seconds'.format(failure_sleeping_time_in_seconds))
             time.sleep(failure_sleeping_time_in_seconds)
-
 
     if is_create_new_filters_enabled:
         mail.create_filters_by_label_name(labels_to_filter_by)
@@ -46,11 +52,5 @@ async def main():
             time.sleep(sleeping_time_in_minutes_before_rescanning*60)
 
 
-
-
 if __name__ == '__main__':
     asyncio.run(main())
-
-
-
-
