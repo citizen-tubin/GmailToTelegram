@@ -1,8 +1,7 @@
 import configparser
 import requests
 from datetime import datetime
-from telegram import Bot, Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram import Bot
 from Messaging_app.message_exception import MessageException
 
 config = configparser.ConfigParser()
@@ -24,7 +23,11 @@ class Message:
             time_diff = datetime.now() - self.last_token_refresh_datetime
             diff_in_hours = time_diff.total_seconds() / 3600
             return diff_in_hours >= poll_interval_in_hours
-        return False
+        return True
+
+    def update_last_token_refresh_time(self):
+        self.last_token_refresh_datetime = datetime.now()
+        print(f"Token refresh time was updated to {self.last_token_refresh_datetime}")
 
     async def send(self, messages):
         bot = Bot(token=bot_token)
@@ -44,28 +47,9 @@ class Message:
         chat_id = response['result'][0]['message']['chat']['id']
         return chat_id
 
-    async def error(self, update:Update, context: ContextTypes.DEFAULT_TYPE):
-        print(f'Update {update} caused error: {context.error}')
-
-    async def __handle_user_response(self, update: Update):
-        message_type = update.message.chat.type
-        text = update.message.text
-        self.last_token_refresh_datetime = datetime.now()
-        print(f'User ({update.message.chat.id}) in {message_type} sent message: "{text}". Token is refreshed.')
-
-    def __start_incoming_messages_handler_bot(self):
-        print("Starting incoming message bot...")
-        app = Application.builder().token(bot_token).build()
-        app.add_handler(MessageHandler(filters.TEXT, self.__handle_user_response))
-        app.add_error_handler(self.error)
-
-        print("Polling...")
-        app.run_polling(poll_interval=5)
-
     def __initialize(self):
         try:
             self.chat_id = self.__get_chat_id()
-            self.__start_incoming_messages_handler_bot()
         except Exception as error:
             print(error)
             raise MessageException("Failed to initialize Message app.")

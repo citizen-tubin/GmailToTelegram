@@ -44,6 +44,6 @@
 
         
     Python
-        1. Run in Terminal 'pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib google-auth python-telegram-bot'
+        1. Run in Terminal 'pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib google-auth python-telegram-bot, pytz'
     
         2. Run the script

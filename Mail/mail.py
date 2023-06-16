@@ -1,5 +1,7 @@
 import os.path
 import ast
+import pytz
+from datetime import datetime, timedelta
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -22,6 +24,7 @@ class Mail:
     def __init__(self):
         self.creds = ""
         self.service = ""
+        self.from_date = None
         self.labels_info = {}
         self.labels_names = []
         self.__initialize()
@@ -77,13 +80,14 @@ class Mail:
                 print(f'An error occurred: {error}')
                 raise Exception
 
-    def get_mail_with_credentials(self):
+    def get_mail(self):
         try:
             messages_meta_data = self.__get_messages_meta_data()
             if not messages_meta_data:
                 return []
 
             summarized_messages = []
+            message_dates = []
             for message_meta_data in messages_meta_data:
                 message_info = self.service.users().messages().get(userId='me', id=message_meta_data['id']).execute()
                 message_headers = {item['name']: item['value'] for item in message_info['payload']['headers']}
@@ -91,6 +95,17 @@ class Mail:
                 result = self.__convert_to_summary_structure(message_info['snippet'], message_headers, labels_names_in_message)
                 self.__mark_message_as_scanned(message_meta_data['id'])
                 summarized_messages.append(result)
+
+                datetime_str = message_headers.get('Date')
+                if datetime_str:
+                    message_datetime = datetime.strptime(datetime_str, "%a, %d %b %Y %H:%M:%S %z").date()
+                    message_dates.append(message_datetime)
+
+            if message_dates:
+                max_date = max(message_dates)
+                self.from_date = max_date - timedelta(days=1)
+
+            print(f'searching mail only from date {self.from_date}')
             return summarized_messages
         except Exception as error:
             print(f'An error occurred: {error}')
@@ -100,7 +115,6 @@ class Mail:
     def find_label_names_by_ids(self,ids):
         all_labels_names = [self.labels_info[key] for key in ids]
         return [label_name for label_name in all_labels_names if label_name in labels_to_filter_by]
-
 
     def __get_credentials_info(self):
         if os.path.exists(token_path):
@@ -125,6 +139,8 @@ class Mail:
     def __get_messages_meta_data(self):
         keywords_to_search_by = "(" + " OR ".join(['"' + word + '"' for word in labels_to_filter_by]) + ")"
         query = "{} is:unread -label:{}".format(keywords_to_search_by , scanned_message_label_name)
+        if self.from_date is not None:
+            query += f" after:{self.from_date.strftime('%Y/%m/%d')}"
         results = self.service.users().messages().list(userId='me', labelIds=['INBOX'], q=query).execute()
         return results.get('messages', [])
 
