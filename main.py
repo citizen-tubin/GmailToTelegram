@@ -6,7 +6,7 @@ import ast
 import configparser
 import asyncio
 import time
-from datetime import datetime
+import logger
 
 config = configparser.ConfigParser()
 config.read('.ini')
@@ -21,21 +21,20 @@ sleeping_time_in_minutes_before_rescanning = config.getint('SYSTEM', 'SLEEPING_T
 async def main():
     while True:
         try:
-            mail = Mail()
             message = Message()
+            mail = Mail()
             break
 
         except (MailException, MessageException) as e:
-            if isinstance(e, MailException):
-                print(e)
+            if isinstance(e, MessageException):
+                logger.warning(e)
+            elif isinstance(e, MailException):
                 await message.send(f"The following error occurred {e}. \n"
                                    f"Please check you mail settings and credentials.")
-            if isinstance(e, MessageException):
-                print(e)
             else:
-                print('An unexpected exception occurred.')
+                logger.error(e)
 
-            print('System will retry in {} seconds'.format(failure_sleeping_time_in_seconds))
+            logger.info('System will retry in {} seconds'.format(failure_sleeping_time_in_seconds))
             time.sleep(failure_sleeping_time_in_seconds)
 
     await refresh_token_if_required(message)
@@ -47,15 +46,18 @@ async def main():
 
             if len(summarized_mail) > 0:
                 await message.send(summarized_mail)
-                print('All unread mail with provided labels were read.')
+                logger.info('All unread mail with provided labels were read.')
 
-            print('The inbox will be rescanned in {} minutes'.format(sleeping_time_in_minutes_before_rescanning))
+            logger.info('The inbox will be rescanned in {} minutes'.format(sleeping_time_in_minutes_before_rescanning))
             time.sleep(sleeping_time_in_minutes_before_rescanning*60)
+
 
 async def refresh_token_if_required(message):
     if message.is_refresh_token_required():
         await message.send(["To refresh the token, please reply with any message."])
         message.update_last_token_refresh_time()
 
+
 if __name__ == '__main__':
+    logger = logger.app_logger
     asyncio.run(main())

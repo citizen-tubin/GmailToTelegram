@@ -4,3 +4,5 @@ TODO.py
 Mail/credentials.json
 *.pyc
 token.json
+app.log
+logger.py
