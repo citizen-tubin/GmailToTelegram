@@ -16,6 +16,7 @@ is_create_new_filters_enabled = config.getboolean('MAIL.FILTERS', 'IS_CREATE_NEW
 labels_to_filter_by = ast.literal_eval(config.get('MAIL.FILTERS', 'LABELS_TO_FILTER_BY'))
 failure_sleeping_time_in_seconds = config.getint('SYSTEM', 'FAILURE_SLEEPING_TIME_IN_SECONDS')
 sleeping_time_in_minutes_before_rescanning = config.getint('SYSTEM', 'SLEEPING_TIME_IN_MINUTES_BEFORE_RESCANNING')
+scanned_message_label_name = ast.literal_eval(config.get('MAIL', 'SCANNED_MESSAGE_LABEL_NAME'))
 
 
 async def main():
@@ -39,10 +40,14 @@ async def main():
 
     await refresh_token_if_required(message)
 
+    if is_create_new_filters_enabled:
+        mail.create_filters_by_label_info(labels_to_filter_by)
+
     if is_run_mail_to_whatsapp_job_enabled:
         while True:
             await refresh_token_if_required(message)
-            summarized_mail = mail.get_mail()
+            query = init_query(mail)
+            summarized_mail = mail.get_mail_summary(query)
 
             if len(summarized_mail) > 0:
                 await message.send(summarized_mail)
@@ -56,6 +61,14 @@ async def refresh_token_if_required(message):
     if message.is_refresh_token_required():
         await message.send(["To refresh the token, please reply with any message."])
         message.update_last_token_refresh_time()
+
+
+def init_query(mail: Mail):
+    keywords_to_search_by = "(" + " OR ".join(['"' + word + '"' for word in labels_to_filter_by]) + ")"
+    query = "{} is:unread -label:{}".format(keywords_to_search_by, scanned_message_label_name)
+    if mail.from_date is not None:
+        query += f" after:{mail.from_date.strftime('%Y/%m/%d')}"
+    return query
 
 
 if __name__ == '__main__':

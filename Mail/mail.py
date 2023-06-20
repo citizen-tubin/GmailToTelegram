@@ -53,7 +53,7 @@ class Mail:
         self.labels_info = {label_info['id']: label_info['name'] for label_info in labels_info['labels']}
         self.labels_names = list(self.labels_info.values())
 
-    def create_filters_by_label_name(self, names):
+    def create_filters_by_label_info(self, names):
         filter_criteria = {
             'criteria': {
                 'query': ''
@@ -83,9 +83,9 @@ class Mail:
                 logger.error(f'An error occurred: {error}')
                 raise Exception
 
-    def get_mail(self):
+    def get_mail_summary(self, query):
         try:
-            messages_meta_data = self.__get_messages_meta_data()
+            messages_meta_data = self.__get_messages_meta_data(query)
             if not messages_meta_data:
                 return []
 
@@ -102,8 +102,12 @@ class Mail:
 
                 datetime_str = message_headers.get('Date')
                 if datetime_str:
-                    message_datetime = datetime.strptime(datetime_str, "%a, %d %b %Y %H:%M:%S %z").date()
-                    message_dates.append(message_datetime)
+                    try:
+                        message_datetime = datetime.strptime(datetime_str, "%a, %d %b %Y %H:%M:%S %z").date()
+                        message_dates.append(message_datetime)
+                    except:
+                        logger.error(f"Failed to parse string: {datetime} to datetime.")
+                        continue
 
             if message_dates:
                 max_date = max(message_dates)
@@ -139,11 +143,7 @@ class Mail:
             with open(token_path, 'w') as token:
                 token.write(self.creds.to_json())
 
-    def __get_messages_meta_data(self):
-        keywords_to_search_by = "(" + " OR ".join(['"' + word + '"' for word in labels_to_filter_by]) + ")"
-        query = "{} is:unread -label:{}".format(keywords_to_search_by, scanned_message_label_name)
-        if self.from_date is not None:
-            query += f" after:{self.from_date.strftime('%Y/%m/%d')}"
+    def __get_messages_meta_data(self, query=None):
         results = self.service.users().messages().list(userId='me', labelIds=['INBOX'], q=query).execute()
         return results.get('messages', [])
 
@@ -174,6 +174,6 @@ class Mail:
             self.service = build('gmail', 'v1', credentials=self.creds)
             self.get_labels_names()
             self.create_label_if_not_exist(scanned_message_label_name)
-        except MailException as error:
+        except Exception as error:
             logger.error(f'An error occurred: {error}')
             raise MailException("Failed to initialize mail.")
