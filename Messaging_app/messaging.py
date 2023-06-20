@@ -1,5 +1,6 @@
 import configparser
 import requests
+import logger
 from datetime import datetime
 from telegram import Bot
 from Messaging_app.message_exception import MessageException
@@ -9,6 +10,8 @@ config.read('.ini')
 
 bot_token = config.get('TELEGRAM', 'TOKEN')
 poll_interval_in_hours = config.getint('TELEGRAM', 'POLL_INTERVAL_IN_HOURS')
+
+logger = logger.app_logger
 
 class Message:
     def __init__(self):
@@ -27,7 +30,7 @@ class Message:
 
     def update_last_token_refresh_time(self):
         self.last_token_refresh_datetime = datetime.now()
-        print(f"Token refresh time was updated to {self.last_token_refresh_datetime}")
+        logger.info(f"Token refresh time was updated to {self.last_token_refresh_datetime}")
 
     async def send(self, messages):
         bot = Bot(token=bot_token)
@@ -39,10 +42,13 @@ class Message:
         response = requests.get(url).json()
 
         if response['ok'] and response['result'] == []:
-            raise Exception('New bot token is required. '
-                                     'Please send your Telegram bot a random message and rerun program')
+            new_token_required_msg = 'New bot token is required. ' \
+                                     'Please send your Telegram bot a random message and rerun program'
+            raise Exception(new_token_required_msg)
         if not response['ok'] and response['description'] == 'Unauthorized':
-            raise Exception('Your bot token is incorrect')
+            incorrect_token_msg = 'Your bot token is incorrect'
+            logger.error(incorrect_token_msg)
+            raise Exception(incorrect_token_msg)
 
         chat_id = response['result'][0]['message']['chat']['id']
         return chat_id
@@ -51,5 +57,5 @@ class Message:
         try:
             self.chat_id = self.__get_chat_id()
         except Exception as error:
-            print(error)
+            logger.error(error)
             raise MessageException("Failed to initialize Message app.")
