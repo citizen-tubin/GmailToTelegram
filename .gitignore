@@ -2,6 +2,7 @@
 .idea/
 TODO.py
 Mail/credentials.json
+Messaging_app/chat_id.json
 *.pyc
 token.json
 app.log

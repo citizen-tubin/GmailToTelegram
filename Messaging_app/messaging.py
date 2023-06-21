@@ -2,6 +2,7 @@ import configparser
 import requests
 import logger
 import ast
+import json
 from datetime import datetime
 from telegram import Bot
 from Messaging_app.message_exception import MessageException
@@ -11,7 +12,6 @@ config.read('.ini')
 
 bot_token = config.get('TELEGRAM', 'TOKEN')
 poll_interval_in_hours = config.getint('TELEGRAM', 'POLL_INTERVAL_IN_HOURS')
-chat_id_ = ast.literal_eval(config.get('TELEGRAM', 'CHAT_ID'))
 
 logger = logger.app_logger
 
@@ -27,27 +27,36 @@ class Message:
 
     async def send(self, messages):
         bot = Bot(token=bot_token)
+        with open('Messaging_app/chat_id.json', 'r') as file:
+            data = json.load(file)
         for message in messages:
-            await bot.send_message(chat_id=ast.literal_eval(config.get('TELEGRAM', 'CHAT_ID')), text=message)
+            await bot.send_message(chat_id=data["chat_id"], text=message)
 
     def __set_chat_id_if_not_exist(self):
-        if chat_id_ != '':
-            return
-        url = f"https://api.telegram.org/bot{bot_token}/getUpdates"
-        response = requests.get(url).json()
+        try:
+            with open('Messaging_app/chat_id.json', 'r') as file:
+                data = json.load(file)
+            if data["chat_id"] != "":
+                return
 
-        if response['ok'] and response['result'] == []:
-            missing_chat_id_msg = 'Chat id is missing. ' \
-                                     'Please send your Telegram bot a random message to retrieve it.'
-            raise Exception(missing_chat_id_msg)
-        if not response['ok'] and response['description'] == 'Unauthorized':
-            incorrect_token_msg = 'Your bot token is incorrect'
-            logger.error(incorrect_token_msg)
-            raise Exception(incorrect_token_msg)
+            url = f"https://api.telegram.org/bot{bot_token}/getUpdates"
+            response = requests.get(url).json()
 
-        config.set('TELEGRAM', 'CHAT_ID', str(response['result'][0]['message']['chat']['id']))
-        with open('.ini', 'w') as config_file:
-            config.write(config_file)
+            if response['ok'] and response['result'] == []:
+                missing_chat_id_msg = 'Chat id is missing. ' \
+                                         'Please send your Telegram bot a random message to retrieve it.'
+                raise Exception(missing_chat_id_msg)
+            if not response['ok'] and response['description'] == 'Unauthorized':
+                incorrect_token_msg = 'Your bot token is incorrect'
+                logger.error(incorrect_token_msg)
+                raise Exception(incorrect_token_msg)
+
+            data["chat_id"] = response['result'][0]['message']['chat']['id']
+            with open('Messaging_app/chat_id.json', 'w') as chat_id_file:
+                json.dump(data, chat_id_file)
+
+        except Exception as error:
+            raise Exception(error)
 
     def __initialize(self):
         try:
