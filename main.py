@@ -38,14 +38,11 @@ async def main():
             logger.info('System will retry in {} seconds'.format(failure_sleeping_time_in_seconds))
             time.sleep(failure_sleeping_time_in_seconds)
 
-    await refresh_token_if_required(message)
-
     if is_create_new_filters_enabled:
         mail.create_filters_by_label_info(labels_to_filter_by)
 
     if is_run_mail_to_whatsapp_job_enabled:
         while True:
-            await refresh_token_if_required(message)
             query = init_query(mail)
             summarized_mail = mail.get_mail_summary(query)
 
@@ -55,12 +52,6 @@ async def main():
 
             logger.info('The inbox will be rescanned in {} minutes'.format(sleeping_time_in_minutes_before_rescanning))
             time.sleep(sleeping_time_in_minutes_before_rescanning*60)
-
-
-async def refresh_token_if_required(message):
-    if message.is_refresh_token_required():
-        await message.send(["To refresh the token, please reply with any message."])
-        message.update_last_token_refresh_time()
 
 
 def init_query(mail: Mail):
