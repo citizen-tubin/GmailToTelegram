@@ -1,7 +1,6 @@
 import configparser
 import requests
 import logger
-import ast
 import json
 from datetime import datetime
 from telegram import Bot
@@ -27,14 +26,14 @@ class Message:
 
     async def send(self, messages):
         bot = Bot(token=bot_token)
-        with open('Messaging_app/chat_id.json', 'r') as file:
+        with open('configs.json', 'r') as file:
             data = json.load(file)
         for message in messages:
             await bot.send_message(chat_id=data["chat_id"], text=message)
 
     def __set_chat_id_if_not_exist(self):
         try:
-            with open('Messaging_app/chat_id.json', 'r') as file:
+            with open('configs.json', 'r') as file:
                 data = json.load(file)
             if data["chat_id"] != "":
                 return
@@ -52,8 +51,8 @@ class Message:
                 raise Exception(incorrect_token_msg)
 
             data["chat_id"] = response['result'][0]['message']['chat']['id']
-            with open('Messaging_app/chat_id.json', 'w') as chat_id_file:
-                json.dump(data, chat_id_file)
+            with open('configs.json', 'w') as file:
+                json.dump(data, file)
 
         except Exception as error:
             raise Exception(error)

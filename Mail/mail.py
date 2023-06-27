@@ -7,7 +7,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 import configparser
 import logger
-
+import json
 from Mail.mail_exception import MailException
 
 config = configparser.ConfigParser()
@@ -27,7 +27,6 @@ class Mail:
     def __init__(self):
         self.creds = ""
         self.service = ""
-        self.from_date = None
         self.labels_info = {}
         self.labels_names = []
         self.__initialize()
@@ -85,6 +84,9 @@ class Mail:
 
     def get_mail_summary(self, query):
         try:
+            with open("configs.json", "r") as file:
+                data = json.load(file)
+
             messages_meta_data = self.__get_messages_meta_data(query)
             if not messages_meta_data:
                 return []
@@ -103,17 +105,20 @@ class Mail:
                 datetime_str = message_headers.get('Date')
                 if datetime_str:
                     try:
-                        message_datetime = datetime.strptime(datetime_str, "%a, %d %b %Y %H:%M:%S %z").date()
-                        message_dates.append(message_datetime)
+                        message_date = datetime.strptime(datetime_str, "%a, %d %b %Y %H:%M:%S %z").date()
+                        message_dates.append(message_date)
                     except:
                         logger.error(f"Failed to parse string: {datetime} to datetime.")
                         continue
 
             if message_dates:
                 max_date = max(message_dates)
-                self.from_date = max_date - timedelta(days=1)
+                from_date = max_date - timedelta(days=1)
+                data["from_date"] = from_date.strftime("%Y/%m/%d")
+                with open("configs.json", 'w') as file:
+                    json.dump(data, file)
 
-            logger.info(f'searching mail only from date {self.from_date}')
+            logger.info(f'searching mail only from date {from_date}')
             return summarized_messages
         except Exception as error:
             logger.error(f'An error occurred: {error}')

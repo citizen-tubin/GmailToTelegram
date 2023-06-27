@@ -5,3 +5,4 @@ Mail/credentials.json
 *.pyc
 token.json
 app.log
+configs.json

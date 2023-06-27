@@ -7,6 +7,7 @@ import configparser
 import asyncio
 import time
 import logger
+import json
 
 config = configparser.ConfigParser()
 config.read('.ini')
@@ -43,22 +44,25 @@ async def main():
 
     if is_run_mail_to_whatsapp_job_enabled:
         while True:
-            query = init_query(mail)
+            query = init_query()
             summarized_mail = mail.get_mail_summary(query)
 
             if len(summarized_mail) > 0:
                 await message.send(summarized_mail)
-                logger.info('All unread mail with provided labels were read.')
+                logger.info(f'{len(summarized_mail)} unread mail with provided labels were read.')
 
             logger.info('The inbox will be rescanned in {} minutes'.format(sleeping_time_in_minutes_before_rescanning))
             time.sleep(sleeping_time_in_minutes_before_rescanning*60)
 
 
-def init_query(mail: Mail):
+def init_query():
     keywords_to_search_by = "(" + " OR ".join(['"' + word + '"' for word in labels_to_filter_by]) + ")"
     query = "{} is:unread -label:{}".format(keywords_to_search_by, scanned_message_label_name)
-    if mail.from_date is not None:
-        query += f" after:{mail.from_date.strftime('%Y/%m/%d')}"
+
+    with open('configs.json', 'r') as file:
+        data = json.load(file)
+    if data["from_date"] != "":
+        query += f" after:{data['from_date']}"
     return query
 
 
