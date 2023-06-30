@@ -46,6 +46,10 @@
     Python
         1. Download Pycharm and Python 3.9
 
-        2. Run in Terminal 'pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib google-auth python-telegram-bot, pytz'
+        2. Verify pip is installed by executing 'pip3 --version'
+
+        3. Run in Terminal 'pip3 install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib google-auth python-telegram-bot pytz'
     
-        3. Run the script
+        4. Create a new .ini file. Copy content from template.ini file into the new .ini and change the values as you like.
+
+        5. Run the script

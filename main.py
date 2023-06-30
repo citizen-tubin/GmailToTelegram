@@ -12,7 +12,7 @@ import json
 config = configparser.ConfigParser()
 config.read('.ini')
 
-is_run_mail_to_whatsapp_job_enabled = config.getboolean('MISSION', 'IS_RUN_MAIL_TO_WHATSAPP_JOB_ENABLED')
+is_run_mail_to_telegram_job_enabled = config.getboolean('MISSION', 'IS_RUN_MAIL_TO_TELEGRAM_JOB_ENABLED')
 is_create_new_filters_enabled = config.getboolean('MAIL.FILTERS', 'IS_CREATE_NEW_FILTERS_ENABLED')
 labels_to_filter_by = ast.literal_eval(config.get('MAIL.FILTERS', 'LABELS_TO_FILTER_BY'))
 failure_sleeping_time_in_seconds = config.getint('SYSTEM', 'FAILURE_SLEEPING_TIME_IN_SECONDS')
@@ -42,7 +42,7 @@ async def main():
     if is_create_new_filters_enabled:
         mail.create_filters_by_label_info(labels_to_filter_by)
 
-    if is_run_mail_to_whatsapp_job_enabled:
+    if is_run_mail_to_telegram_job_enabled:
         while True:
             query = init_query()
             summarized_mail = mail.get_mail_summary(query)

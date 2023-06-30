@@ -10,7 +10,6 @@ config = configparser.ConfigParser()
 config.read('.ini')
 
 bot_token = config.get('TELEGRAM', 'TOKEN')
-poll_interval_in_hours = config.getint('TELEGRAM', 'POLL_INTERVAL_IN_HOURS')
 
 logger = logger.app_logger
 
