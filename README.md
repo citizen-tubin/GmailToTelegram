@@ -10,7 +10,7 @@
         5. Enable the Gmail API for your project by clicking on the "Enable APIs and Services" button at the top of the screen,
             then searching for "Gmail API" and selecting it, and finally clicking the "Enable" button.
     
-        6. Create a set of OAuth 2.0 credentials by clicking on the "Create credentials" button on the right side of the screen, then selecting "OAuth client ID":
+        6. Create a set of OAuth 2.0 credentials: Go to 'Navigation Menu'. Click 'API & Services', on the left handside of screen, and then 'Credentials'. Click "Create credentials", and then select "OAuth client ID":
             6.1 Go to the Google Cloud Console and select your project.
             6.2 In the left-hand navigation menu, select "APIs & Services" > "Credentials".
             6.3 Select the application type you need (e.g., desktop app, web application, etc.) and give your credentials a name.
