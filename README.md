@@ -44,6 +44,8 @@
 
         
     Python
-        1. Run in Terminal 'pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib google-auth python-telegram-bot, pytz'
+        1. Download Pycharm and Python 3.9
+
+        2. Run in Terminal 'pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib google-auth python-telegram-bot, pytz'
     
-        2. Run the script
+        3. Run the script
